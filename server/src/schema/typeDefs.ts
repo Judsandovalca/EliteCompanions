@@ -6,6 +6,74 @@ export const typeDefs = gql`
     companion(id: ID!): Companion
     categories: [Category!]!
     featuredCompanions(limit: Int): [Companion!]!
+    me: User
+    myCompanions: [Companion!]!
+  }
+
+  type Mutation {
+    register(input: RegisterInput!): AuthPayload!
+    login(input: LoginInput!): AuthPayload!
+    logout: Boolean!
+    createCompanion(input: CreateCompanionInput!): Companion!
+    toggleCompanionStatus(id: ID!): Companion!
+  }
+
+  input CreateCompanionInput {
+    name: String!
+    age: Int!
+    bio: String
+    tagline: String
+    ethnicity: String
+    bodyType: String
+    hairColor: String
+    eyeColor: String
+    height: Int
+    languages: [String!]!
+    services: [String!]!
+    tags: [String!]
+    availability: String
+    city: String!
+    region: String
+    country: String!
+    pricePerHour: Int
+    currency: String
+    categoryIds: [String!]!
+    images: [CompanionImageInput!]!
+  }
+
+  input CompanionImageInput {
+    position: Int!
+    s3Key: String!
+    thumbUrl: String!
+    mediumUrl: String!
+    fullUrl: String!
+    width: Int!
+    height: Int!
+    blurHash: String
+    isPrimary: Boolean!
+  }
+
+  input RegisterInput {
+    email: String!
+    name: String!
+    password: String!
+  }
+
+  input LoginInput {
+    email: String!
+    password: String!
+  }
+
+  type AuthPayload {
+    user: User!
+  }
+
+  type User {
+    id: ID!
+    email: String!
+    name: String!
+    role: String!
+    createdAt: String!
   }
 
   input CompanionsInput {
@@ -21,6 +89,7 @@ export const typeDefs = gql`
     priceMin: Int
     priceMax: Int
     verified: Boolean
+    tag: String
     sortBy: SortBy
   }
 
@@ -51,6 +120,7 @@ export const typeDefs = gql`
     height: Int
     languages: [String!]!
     services: [String!]!
+    tags: [String!]!
     availability: String
     city: String!
     region: String
@@ -61,6 +131,7 @@ export const typeDefs = gql`
     reviewCount: Int!
     verified: Boolean!
     featured: Boolean!
+    status: String!
     primaryImage: CompanionImage
     images: [CompanionImage!]!
     categories: [Category!]!

@@ -1,49 +1,52 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { PrismaClient } from "@prisma/client";
-import { Redis } from "ioredis";
 import { typeDefs } from "./schema/typeDefs.js";
 import { resolvers } from "./resolvers/index.js";
+import { getUserIdFromRequest } from "./auth.js";
+import { uploadRouter } from "./routes/upload.js";
+import type { GraphQLContext } from "./resolvers/index.js";
 
 const PORT = parseInt(process.env.PORT ?? "4000", 10);
 const CORS_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:3000";
 
 async function main() {
   const prisma = new PrismaClient();
-  const redis = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379", {
-    maxRetriesPerRequest: 3,
-    lazyConnect: true,
-  });
 
-  // Gracefully handle Redis connection failures (server works without cache)
-  redis.on("error", (err) => {
-    console.warn("Redis connection error (caching disabled):", err.message);
-  });
-
-  try {
-    await redis.connect();
-    console.log("Redis connected");
-  } catch {
-    console.warn("Redis unavailable — running without cache");
-  }
-
-  const server = new ApolloServer({ typeDefs, resolvers });
+  const server = new ApolloServer<GraphQLContext>({ typeDefs, resolvers });
   await server.start();
 
   const app = express();
 
-  app.use(cors({ origin: CORS_ORIGIN }));
-  app.use(express.json({ limit: "1mb" }));
+  const corsOptions = {
+    origin: CORS_ORIGIN,
+    credentials: true,
+  };
 
+  app.use(cors(corsOptions));
+  app.use(express.json({ limit: "1mb" }));
+  app.use(cookieParser());
+
+  // Explicitly handle preflight for /graphql
+  app.options("/graphql", cors(corsOptions));
+
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   app.use(
     "/graphql",
-    expressMiddleware(server, {
-      context: async () => ({ prisma, redis }),
-    })
+    expressMiddleware<GraphQLContext>(server, {
+      context: async ({ req, res }) => {
+        const userId = getUserIdFromRequest(req as unknown as Parameters<typeof getUserIdFromRequest>[0]);
+        return { prisma, req, res, userId } as unknown as GraphQLContext;
+      },
+    }) as unknown as express.RequestHandler
   );
+
+  app.use("/uploads", express.static("public/uploads"));
+  app.use("/api", uploadRouter);
 
   app.get("/health", (_req, res) => {
     res.json({ status: "ok" });

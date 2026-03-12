@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@apollo/client/react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GET_COMPANIONS } from "@/lib/queries";
 import { CompanionCard } from "./CompanionCard";
 import { FilterBar } from "./FilterBar";
@@ -30,12 +30,21 @@ export function CompanionGrid() {
     },
   });
 
-  // Infinite scroll trigger
   const observer = useRef<IntersectionObserver | null>(null);
+  const lastNodeRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      observer.current?.disconnect();
+    };
+  }, []);
+
   const lastCardRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (loading) return;
       if (observer.current) observer.current.disconnect();
+      lastNodeRef.current = node;
+
+      if (loading || !node) return;
 
       observer.current = new IntersectionObserver(
         ([entry]) => {
@@ -54,7 +63,7 @@ export function CompanionGrid() {
         { rootMargin: "400px" }
       );
 
-      if (node) observer.current.observe(node);
+      observer.current.observe(node);
     },
     [loading, data, fetchMore, filters]
   );
@@ -70,15 +79,16 @@ export function CompanionGrid() {
     <div className="space-y-6">
       <FilterBar filters={filters} onChange={handleFilterChange} />
 
-      {/* Results count */}
       {!loading && (
-        <p className="text-sm text-zinc-500">
-          Showing {companions.length} of {totalCount} companions
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-warm-gray">
+            {totalCount} acompañante{totalCount !== 1 ? "s" : ""}
+          </p>
+        </div>
       )}
 
-      {/* Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+      {/* Grid — tarjetas grandes: 2 cols móvil, 3 tablet, 4 escritorio */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
         {companions.map((companion: Companion, index: number) => (
           <div
             key={companion.id}
@@ -90,6 +100,7 @@ export function CompanionGrid() {
               age={companion.age}
               tagline={companion.tagline}
               city={companion.city}
+              tags={companion.tags}
               pricePerHour={companion.pricePerHour}
               currency={companion.currency}
               rating={companion.rating}
@@ -100,36 +111,27 @@ export function CompanionGrid() {
           </div>
         ))}
 
-        {/* Loading skeletons */}
         {loading &&
-          Array.from({ length: 12 }).map((_, i) => (
-            <div
-              key={`skeleton-${i}`}
-              className="animate-pulse rounded-2xl bg-zinc-900"
-            >
-              <div
-                className="rounded-t-2xl bg-zinc-800"
-                style={{ paddingBottom: "133%" }}
-              />
+          Array.from({ length: 8 }).map((_, i) => (
+            <div key={`skeleton-${i}`} className="animate-pulse rounded-2xl bg-cream">
+              <div className="aspect-[3/4] rounded-t-2xl bg-sand/40" />
               <div className="space-y-2 p-4">
-                <div className="h-4 w-3/4 rounded bg-zinc-800" />
-                <div className="h-3 w-1/2 rounded bg-zinc-800" />
+                <div className="h-4 w-3/4 rounded bg-sand/40" />
+                <div className="h-3 w-1/2 rounded bg-sand/40" />
               </div>
             </div>
           ))}
       </div>
 
-      {/* Error state */}
       {error && (
-        <div className="rounded-xl border border-red-900/50 bg-red-950/30 p-6 text-center text-red-400">
-          Failed to load companions. Please try again.
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-red-600">
+          Error al cargar acompañantes. Intenta de nuevo.
         </div>
       )}
 
-      {/* Loading more indicator */}
       {data?.companions?.hasMore && !loading && (
-        <div className="py-8 text-center text-zinc-600">
-          <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-zinc-700 border-t-pink-500" />
+        <div className="flex justify-center py-10">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-sand border-t-gold" />
         </div>
       )}
     </div>

@@ -18,15 +18,15 @@ interface FilterBarProps {
   onChange: (filters: Filters) => void;
 }
 
-const CITIES = ["All", "Miami", "New York", "Los Angeles", "Las Vegas", "Chicago", "Houston", "Dallas", "Atlanta"];
-const ETHNICITIES = ["All", "Latina", "European", "Asian", "African", "Middle Eastern", "Mixed"];
-const BODY_TYPES = ["All", "Slim", "Athletic", "Curvy", "Petite"];
-const HAIR_COLORS = ["All", "Blonde", "Brunette", "Black", "Red", "Auburn"];
+const CITIES = ["Todas", "Miami", "New York", "Los Angeles", "Las Vegas", "Chicago", "Houston", "Dallas", "Atlanta", "Bogotá", "Medellín", "Cali"];
+const ETHNICITIES = ["Todas", "Latina", "Europea", "Asiática", "Africana", "Árabe", "Mixta"];
+const BODY_TYPES = ["Todos", "Delgada", "Atlética", "Curvilínea", "Petite"];
+const HAIR_COLORS = ["Todos", "Rubia", "Castaña", "Negra", "Pelirroja", "Cobriza"];
 const SORT_OPTIONS = [
-  { value: "NEWEST", label: "Newest" },
-  { value: "RATING", label: "Top Rated" },
-  { value: "PRICE_LOW", label: "Price: Low" },
-  { value: "PRICE_HIGH", label: "Price: High" },
+  { value: "NEWEST", label: "Más Recientes" },
+  { value: "RATING", label: "Mejor Valoradas" },
+  { value: "PRICE_LOW", label: "Precio: Menor" },
+  { value: "PRICE_HIGH", label: "Precio: Mayor" },
 ];
 
 function SelectFilter({
@@ -41,17 +41,17 @@ function SelectFilter({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+    <div className="flex flex-col gap-1.5">
+      <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-warm-gray">
         {label}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white outline-none transition focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+        className="rounded-lg border border-sand bg-white px-3 py-2.5 text-sm text-charcoal outline-none transition-colors focus:border-gold focus:ring-1 focus:ring-gold/30"
       >
         {options.map((opt) => (
-          <option key={opt} value={opt === "All" ? "" : opt}>
+          <option key={opt} value={opt === "Todas" || opt === "Todos" ? "" : opt}>
             {opt}
           </option>
         ))}
@@ -67,36 +67,37 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
     onChange({ ...filters, [key]: value || undefined });
   };
 
+  const activeCount = Object.values(filters).filter(Boolean).length;
+
   return (
-    <div className="rounded-2xl border border-zinc-800/50 bg-zinc-900/50 p-4 backdrop-blur-sm">
-      {/* Primary row - always visible */}
+    <div className="rounded-2xl border border-sand/80 bg-white p-5">
       <div className="flex flex-wrap items-end gap-4">
         <SelectFilter
-          label="City"
+          label="Ciudad"
           value={filters.city ?? ""}
           options={CITIES}
           onChange={(v) => update("city", v)}
         />
         <SelectFilter
-          label="Ethnicity"
+          label="Etnia"
           value={filters.ethnicity ?? ""}
           options={ETHNICITIES}
           onChange={(v) => update("ethnicity", v)}
         />
         <SelectFilter
-          label="Body Type"
+          label="Contextura"
           value={filters.bodyType ?? ""}
           options={BODY_TYPES}
           onChange={(v) => update("bodyType", v)}
         />
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-            Sort
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-warm-gray">
+            Ordenar
           </label>
           <select
             value={filters.sortBy ?? "NEWEST"}
             onChange={(e) => update("sortBy", e.target.value)}
-            className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white outline-none transition focus:border-pink-500 focus:ring-1 focus:ring-pink-500"
+            className="rounded-lg border border-sand bg-white px-3 py-2.5 text-sm text-charcoal outline-none transition-colors focus:border-gold focus:ring-1 focus:ring-gold/30"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -108,58 +109,66 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
 
         <button
           onClick={() => setExpanded(!expanded)}
-          className="rounded-lg border border-zinc-700 px-4 py-2 text-sm text-zinc-400 transition hover:border-pink-500 hover:text-white"
+          className="rounded-lg border border-sand px-4 py-2.5 text-sm font-medium text-warm-gray transition-all hover:border-charcoal/30 hover:text-charcoal"
         >
-          {expanded ? "Less Filters" : "More Filters"}
+          {expanded ? "Menos" : "Más Filtros"}
         </button>
 
-        <label className="flex cursor-pointer items-center gap-2 py-2">
+        <label className="flex cursor-pointer items-center gap-2.5 py-2.5">
           <input
             type="checkbox"
             checked={filters.verified ?? false}
             onChange={(e) => update("verified", e.target.checked || undefined)}
-            className="h-4 w-4 rounded border-zinc-700 bg-zinc-800 text-pink-500 focus:ring-pink-500"
+            className="h-4 w-4 rounded border-sand bg-white text-gold accent-gold focus:ring-gold/30"
           />
-          <span className="text-sm text-zinc-300">Verified only</span>
+          <span className="text-sm text-charcoal">Solo verificadas</span>
         </label>
+
+        {activeCount > 0 && (
+          <button
+            onClick={() => onChange({})}
+            className="py-2.5 text-sm font-medium text-gold transition-colors hover:text-charcoal"
+          >
+            Limpiar todo
+          </button>
+        )}
       </div>
 
-      {/* Expanded row */}
       {expanded && (
-        <div className="mt-4 flex flex-wrap items-end gap-4 border-t border-zinc-800 pt-4">
+        <div className="mt-4 flex flex-wrap items-end gap-4 border-t border-sand/60 pt-4">
           <SelectFilter
-            label="Hair"
+            label="Color de Cabello"
             value={filters.hairColor ?? ""}
             options={HAIR_COLORS}
             onChange={(v) => update("hairColor", v)}
           />
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-              Age Range
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-warm-gray">
+              Rango de Edad
             </label>
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                placeholder="Min"
+                placeholder="Mín"
                 min={18}
                 max={99}
                 value={filters.ageMin ?? ""}
                 onChange={(e) =>
                   update("ageMin", e.target.value ? parseInt(e.target.value) : undefined)
                 }
-                className="w-20 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-pink-500"
+                className="w-20 rounded-lg border border-sand bg-white px-3 py-2.5 text-sm text-charcoal outline-none focus:border-gold"
               />
-              <span className="text-zinc-600">-</span>
+              <span className="text-sand">—</span>
               <input
                 type="number"
-                placeholder="Max"
+                placeholder="Máx"
                 min={18}
                 max={99}
                 value={filters.ageMax ?? ""}
                 onChange={(e) =>
                   update("ageMax", e.target.value ? parseInt(e.target.value) : undefined)
                 }
-                className="w-20 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-pink-500"
+                className="w-20 rounded-lg border border-sand bg-white px-3 py-2.5 text-sm text-charcoal outline-none focus:border-gold"
               />
             </div>
           </div>

@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Companion {
@@ -20,6 +21,7 @@ model Companion {
   height      Int?          // in cm
   languages   String[]
   services    String[]
+  tags        String[]
   availability String?
   city        String
   region      String?
@@ -33,6 +35,8 @@ model Companion {
   verified    Boolean       @default(false)
   featured    Boolean       @default(false)
   status      CompanionStatus @default(ACTIVE)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
   images      CompanionImage[]
   categories  CategoriesOnCompanions[]
   createdAt   DateTime @default(now())
@@ -42,6 +46,7 @@ model Companion {
   @@index([city])
   @@index([featured])
   @@index([createdAt(sort: Desc)])
+  @@index([userId])
 }
 
 model CompanionImage {
@@ -83,4 +88,20 @@ enum CompanionStatus {
   ACTIVE
   INACTIVE
   SUSPENDED
+}
+
+model User {
+  id         String      @id @default(uuid())
+  email      String      @unique
+  name       String
+  password   String
+  role       UserRole    @default(USER)
+  companions Companion[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
