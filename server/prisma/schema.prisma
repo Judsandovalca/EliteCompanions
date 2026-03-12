@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Companion {
+  id          String   @id @default(uuid())
+  name        String
+  age         Int
+  bio         String?
+  tagline     String?
+  ethnicity   String?
+  bodyType    String?
+  hairColor   String?
+  eyeColor    String?
+  height      Int?          // in cm
+  languages   String[]
+  services    String[]
+  availability String?
+  city        String
+  region      String?
+  country     String        @default("US")
+  latitude    Float?
+  longitude   Float?
+  pricePerHour Int?         // in cents
+  currency    String        @default("USD")
+  rating      Float         @default(0)
+  reviewCount Int           @default(0)
+  verified    Boolean       @default(false)
+  featured    Boolean       @default(false)
+  status      CompanionStatus @default(ACTIVE)
+  images      CompanionImage[]
+  categories  CategoriesOnCompanions[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([city])
+  @@index([featured])
+  @@index([createdAt(sort: Desc)])
+}
+
+model CompanionImage {
+  id          String   @id @default(uuid())
+  companionId String
+  companion   Companion @relation(fields: [companionId], references: [id], onDelete: Cascade)
+  position    Int
+  s3Key       String
+  thumbUrl    String
+  mediumUrl   String
+  fullUrl     String
+  width       Int
+  height      Int
+  blurHash    String?
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([companionId, position])
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  companions  CategoriesOnCompanions[]
+}
+
+model CategoriesOnCompanions {
+  companion   Companion @relation(fields: [companionId], references: [id], onDelete: Cascade)
+  companionId String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  categoryId  String
+
+  @@id([companionId, categoryId])
+}
+
+enum CompanionStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
