@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { AuthModal } from "./AuthModal";
 import { HeartIcon } from "./icons/HeartIcon";
@@ -19,10 +20,17 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [authModal, setAuthModal] = useState<AuthMode | null>(null);
   const { user, loading, logout } = useAuth();
+  const router = useRouter();
 
   const [category, setCategory] = useState("Escorts");
   const [city, setCity] = useState("");
   const [searchText, setSearchText] = useState("");
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (searchText.trim()) params.set("q", searchText.trim());
+    router.push(`/?${params.toString()}`);
+  };
 
   const openLogin = () => {
     setAuthModal("login");
@@ -155,12 +163,16 @@ export function Header() {
                 type="text"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 placeholder="Buscar por nombre, servicio..."
                 className="h-9 w-full rounded-lg border border-sand/80 bg-white pl-9 pr-3 text-sm text-charcoal placeholder:text-warm-gray/60 outline-none transition focus:border-gold"
               />
             </div>
 
-            <button className="h-9 rounded-lg bg-espresso px-5 text-sm font-semibold text-ivory transition-colors hover:bg-charcoal active:scale-[0.97]">
+            <button
+              onClick={handleSearch}
+              className="h-9 rounded-lg bg-espresso px-5 text-sm font-semibold text-ivory transition-colors hover:bg-charcoal active:scale-[0.97]"
+            >
               Buscar
             </button>
 

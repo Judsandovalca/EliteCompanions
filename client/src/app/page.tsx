@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Header } from "@/components/Header";
 import { FeaturedSection } from "@/components/FeaturedSection";
 import { CompanionGrid } from "@/components/CompanionGrid";
@@ -25,7 +26,9 @@ export default function Home() {
             Todas las Acompañantes
           </h2>
         </div>
-        <CompanionGrid />
+        <Suspense>
+          <CompanionGrid />
+        </Suspense>
       </section>
 
       {/* Pie de página */}

@@ -91,6 +91,7 @@ export const typeDefs = gql`
     verified: Boolean
     tag: String
     sortBy: SortBy
+    search: String
   }
 
   enum SortBy {

@@ -35,6 +35,7 @@ interface CompanionsInput {
   verified?: boolean;
   tag?: string;
   sortBy?: "NEWEST" | "RATING" | "PRICE_LOW" | "PRICE_HIGH";
+  search?: string;
 }
 
 interface CompanionImageInput {
@@ -114,6 +115,7 @@ export const resolvers = {
         verified,
         tag,
         sortBy = "NEWEST",
+        search,
       } = input ?? {};
 
       const limit = Math.min(rawLimit ?? DEFAULT_LIMIT, MAX_LIMIT);
@@ -140,6 +142,13 @@ export const resolvers = {
         ...(tag && { tags: { has: tag } }),
         ...(category && {
           categories: { some: { category: { slug: category } } },
+        }),
+        ...(search && {
+          OR: [
+            { name: { contains: search, mode: "insensitive" as const } },
+            { tagline: { contains: search, mode: "insensitive" as const } },
+            { bio: { contains: search, mode: "insensitive" as const } },
+          ],
         }),
       };
 
