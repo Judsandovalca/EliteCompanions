@@ -2,6 +2,7 @@
 
 import { useQuery } from "@apollo/client/react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { GET_COMPANIONS } from "@/lib/queries";
 import { CompanionCard } from "./CompanionCard";
 import { FilterBar } from "./FilterBar";
@@ -20,12 +21,16 @@ interface Filters {
 
 export function CompanionGrid() {
   const [filters, setFilters] = useState<Filters>({});
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const searchQuery = searchParams.get("q") ?? undefined;
 
   const { data, loading, error, fetchMore } = useQuery<GetCompanionsData>(GET_COMPANIONS, {
     variables: {
       input: {
         limit: 24,
         ...filters,
+        ...(searchQuery && { search: searchQuery }),
       },
     },
   });
@@ -55,6 +60,7 @@ export function CompanionGrid() {
                   ...filters,
                   limit: 24,
                   cursor: data.companions.nextCursor,
+                  ...(searchQuery && { search: searchQuery }),
                 },
               },
             });
@@ -65,7 +71,7 @@ export function CompanionGrid() {
 
       observer.current.observe(node);
     },
-    [loading, data, fetchMore, filters]
+    [loading, data, fetchMore, filters, searchQuery]
   );
 
   const handleFilterChange = (newFilters: Filters) => {
@@ -78,6 +84,20 @@ export function CompanionGrid() {
   return (
     <div className="space-y-6">
       <FilterBar filters={filters} onChange={handleFilterChange} />
+
+      {searchQuery && (
+        <div className="flex items-center gap-3 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3">
+          <p className="flex-1 text-sm text-charcoal">
+            Resultados para <span className="font-semibold">"{searchQuery}"</span>
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="text-xs font-medium text-warm-gray transition-colors hover:text-espresso"
+          >
+            Limpiar búsqueda ×
+          </button>
+        </div>
+      )}
 
       {!loading && (
         <div className="flex items-center justify-between">
